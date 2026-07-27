@@ -1,0 +1,8 @@
+<div id="sse-container"
+     hx-ext="sse"
+     sse-connect="/api/stream/{{ stream_id }}"
+     sse-swap="message"
+     hx-target="this"
+     hx-swap="beforeend">
+    <div class="stream-status">Conectando...</div>
+</div>

@@ -1,0 +1,10 @@
+<label>Dispositivo</label>
+<select name="hostname"
+        required
+        x-model="selected_device"
+        @change="$dispatch('device-selected')">
+    <option value="">Seleccionar dispositivo</option>
+    {% for d in devices %}
+    <option value="{{ d.name }}">{{ d.name }}</option>
+    {% endfor %}
+</select>
