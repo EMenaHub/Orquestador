@@ -1,46 +1,88 @@
 {% extends "base.html" %}
 {% block content %}
-<div x-data="{ loading: false, error: '', selected_device: '' }">
-    <header>
-        <h1>Orquestador</h1>
-        <span>{{ user_email }}</span>
-        <form action="/auth/logout" method="post">
-            <button type="submit">Cerrar sesión</button>
-        </form>
-    </header>
+<div class="app-container" x-data="{ loading: false, error: '', selected_device: '' }">
 
-    <div id="tenants-container"
-         hx-get="/api/tenants"
-         hx-trigger="load"
-         hx-target="this"
-         hx-swap="innerHTML"
-         @device-selected.window="selected_device = $event.target.value">
+    <div class="glass-card">
+        <div class="header-bar">
+            <span class="header-bar__title text-gradient">Orquestador</span>
+            <span class="header-bar__spacer"></span>
+            <span class="header-bar__user">{{ user_email }}</span>
+            <form action="/auth/logout" method="post" class="logout-form">
+                <button type="submit">Cerrar sesión</button>
+            </form>
+        </div>
+
+        <div id="tenants-container"
+             class="tabs-container"
+             hx-get="/api/tenants"
+             hx-trigger="load"
+             hx-target="this"
+             hx-swap="innerHTML"
+             @device-selected.window="selected_device = $event.target.value">
+            <div class="loading-spinner" role="status">
+                Cargando dispositivos…
+            </div>
+        </div>
+
+        <form id="query-form"
+              x-show="selected_device"
+              x-cloak
+              x-transition:enter="tab-panel"
+              class="content-section"
+              hx-post="/api/query"
+              hx-target="#response"
+              hx-swap="innerHTML">
+
+            <div style="margin-bottom:0.75rem;">
+                <label class="label-tag" style="display:block;margin-bottom:0.5rem;">
+                    Equipo seleccionado
+                </label>
+                <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:rgba(94,106,210,0.06);border:1px solid rgba(94,106,210,0.15);border-radius:6px;">
+                    <span style="font-size:0.8125rem;font-weight:500;color:var(--accent);font-family:'SF Mono','JetBrains Mono',monospace;" x-text="selected_device"></span>
+                </div>
+            </div>
+
+            <input type="hidden" name="hostname" :value="selected_device">
+
+            <label class="label-tag" style="display:block;margin-bottom:0.5rem;">
+                Consulta
+            </label>
+            <textarea class="input textarea"
+                      name="question"
+                      placeholder='Ej: ¿Qué interfaces tienen asignada la vlan 50?'
+                      required
+                      :disabled="loading"></textarea>
+
+            <button type="submit"
+                    class="btn btn--primary"
+                    :disabled="loading"
+                    style="width:100%;">
+                <span x-show="!loading">Consultar</span>
+                <span x-show="loading">Procesando…</span>
+            </button>
+        </form>
+
+        <div id="response" class="content-section"></div>
+
+        <div x-show="loading" class="loading-spinner" role="status">
+            Consultando dispositivo…
+        </div>
+        <div x-show="error" x-text="error" class="alert-error" role="alert"></div>
     </div>
 
-    <form id="query-form"
-          x-show="selected_device"
-          hx-post="/api/query"
-          hx-target="#response"
-          hx-swap="innerHTML"
-          @submit.prevent="loading = true; error = ''">
-        <input type="hidden" name="hostname" x-model="selected_device">
-        <textarea name="question"
-                  placeholder="Ej: ¿Qué interfaces tienen asignada la vlan 50?"
-                  required
-                  :disabled="loading"></textarea>
-        <button type="submit" :disabled="loading">Consultar</button>
-    </form>
-
-    <div id="response"></div>
-
-    <div x-show="loading" role="status">Procesando...</div>
-    <div x-show="error" x-text="error" role="alert"></div>
 </div>
 
 <script>
     document.addEventListener('htmx:afterSwap', function(evt) {
+        if (typeof Alpine !== 'undefined') {
+            Alpine.initTree(evt.detail.elt);
+        }
+        const el = document.querySelector('[x-data]');
+        if (evt.detail.target.id === 'tenants-container') {
+            if (el) Alpine.evaluate(el, 'loading = false');
+        }
         if (evt.detail.target.id === 'response') {
-            Alpine.evaluate(document.querySelector('[x-data]'), 'loading = false');
+            if (el) Alpine.evaluate(el, 'loading = false');
         }
     });
     document.addEventListener('htmx:beforeRequest', function(evt) {
@@ -49,7 +91,13 @@
     });
     document.addEventListener('htmx:sendError', function(evt) {
         const el = document.querySelector('[x-data]');
-        if (el) Alpine.evaluate(el, 'loading = false; error = "Error de conexión"');
+        if (el) Alpine.evaluate(el, 'loading = false; error = "Error de conexión con el servidor"');
+    });
+    document.addEventListener('htmx:responseError', function(evt) {
+        const el = document.querySelector('[x-data]');
+        if (el && !evt.detail.target.querySelector('.alert-error')) {
+            Alpine.evaluate(el, 'loading = false; error = "Error de conexión con el servidor"');
+        }
     });
 </script>
 {% endblock %}

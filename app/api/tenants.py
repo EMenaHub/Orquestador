@@ -18,5 +18,9 @@ async def list_tenants(
     return templates.TemplateResponse(
         request,
         "partials/tenants.html",
-        {"tenants": tenants, "devices_by_tenant": devices_by_tenant},
+        {
+            "tenants": tenants,
+            "devices_by_tenant": devices_by_tenant,
+            "nautobot_ok": nautobot.nautobot_available(),
+        },
     )

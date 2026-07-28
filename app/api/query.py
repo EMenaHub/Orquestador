@@ -24,6 +24,12 @@ async def query_device(
             "partials/respuesta.html",
             {"error": str(e)},
         )
+    except Exception as e:
+        return templates.TemplateResponse(
+            request,
+            "partials/respuesta.html",
+            {"error": f"Error al conectar con Oxidized o LLM: {e}"},
+        )
 
     return templates.TemplateResponse(
         request,

@@ -3,7 +3,13 @@
     selected_device: ''
 }">
     {% if not devices_by_tenant %}
-    <p class="empty-state">No se encontraron dispositivos con los roles configurados.</p>
+        {% if nautobot_ok %}
+        <p class="empty-state">No se encontraron dispositivos con los roles configurados.</p>
+        {% else %}
+        <p class="empty-state" style="color:var(--foreground-muted);">
+            No se pudo conectar a Nautobot. Verifica la conexión VPN e intenta recargar la página.
+        </p>
+        {% endif %}
     {% else %}
 
     <nav class="tabs" role="tablist">
@@ -14,20 +20,26 @@
                 role="tab"
                 :aria-selected="activeTab === '{{ group.id }}'">
             {{ group.name }}
+            <span class="device-count">{{ group.devices|length }}</span>
         </button>
         {% endfor %}
     </nav>
 
     {% for group in devices_by_tenant %}
-    <div x-show="activeTab === '{{ group.id }}'" role="tabpanel" class="tab-panel">
-        <select x-model="selected_device"
-                @change="$dispatch('device-selected')"
-                required>
-            <option value="">Seleccionar equipo</option>
-            {% for device in group.devices %}
-            <option value="{{ device.name }}">{{ device.name }}</option>
-            {% endfor %}
-        </select>
+    <div x-show="activeTab === '{{ group.id }}'" role="tabpanel" class="tab-panel content-section" style="padding-top:0;">
+        <label class="label-tag" style="display:block;margin-bottom:0.5rem;">
+            Dispositivos disponibles
+        </label>
+        <div class="select-wrapper">
+            <select class="select" x-model="selected_device"
+                    @change="$dispatch('device-selected')"
+                    required>
+                <option value="">Seleccionar equipo</option>
+                {% for device in group.devices %}
+                <option value="{{ device.name }}">{{ device.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
     </div>
     {% endfor %}
 

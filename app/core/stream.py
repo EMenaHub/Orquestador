@@ -3,7 +3,7 @@ import uuid
 from collections.abc import AsyncGenerator
 
 from app.core.oxidized import create_oxidized_client
-from app.core.llm import ask_stream
+from app.core.llm import ask_stream, LLM_TIMEOUT
 
 _active_streams: dict[str, asyncio.Queue] = {}
 
@@ -30,16 +30,23 @@ async def _run_llm(stream_id: str, hostname: str, config: str, question: str):
     try:
         async for chunk in ask_stream(hostname, config, question):
             await queue.put(chunk)
+    except asyncio.TimeoutError:
+        await queue.put(
+            "[Error: La consulta al modelo LLM excedió el tiempo de espera. "
+            "Verifica que OpenWebUI esté accesible desde tu VPN.]"
+        )
     except Exception as e:
-        await queue.put(f"\n\n[Error: {e}]")
+        await queue.put(f"[Error: {e}]")
     finally:
         await queue.put(None)
 
 
 async def iter_stream(stream_id: str) -> AsyncGenerator[str, None]:
     queue = _active_streams.get(stream_id)
-    if not queue:
-        yield "event: error\ndata: Stream no encontrado\n\n"
+    if queue is None:
+        if stream_id in _active_streams:
+            return  # stream already completed, close silently
+        yield "data: Stream no encontrado\n\n"
         return
 
     while True:
@@ -48,4 +55,4 @@ async def iter_stream(stream_id: str) -> AsyncGenerator[str, None]:
             break
         yield f"data: {chunk}\n\n"
 
-    _active_streams.pop(stream_id, None)
+    _active_streams[stream_id] = None  # mark as done

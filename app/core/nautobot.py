@@ -1,7 +1,12 @@
+import logging
 from cachetools import TTLCache
+from collections.abc import Callable
 import httpx
+import functools
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 TENANTS_MAP: dict[str, dict] = {
     "Zapping Chile": {"id": "fe1e9621-9706-4769-a06f-a12c7a5cd36b", "name": "Zapping Chile"},
@@ -20,6 +25,7 @@ MANUAL_DEVICES: list[dict] = [
     {"name": "EC-EV-EDGE", "tenant": "Zapping Ecuador", "role": "SWITCH"},
 ]
 
+_nautobot_ok: bool = True
 _tenants_cache: TTLCache = TTLCache(maxsize=1, ttl=settings.cache_ttl_regions)
 _devices_cache: TTLCache = TTLCache(maxsize=1, ttl=settings.cache_ttl_devices)
 
@@ -61,11 +67,23 @@ async def _graphql(query: str, variables: dict | None = None) -> dict:
         return data["data"]
 
 
+def nautobot_available() -> bool:
+    return _nautobot_ok
+
+
 async def get_tenants() -> list[dict]:
+    global _nautobot_ok
     if _tenants_cache:
         return list(_tenants_cache.values())
 
-    data = await _graphql(GRAPHQL_QUERY_TENANTS)
+    try:
+        data = await _graphql(GRAPHQL_QUERY_TENANTS)
+        _nautobot_ok = True
+    except Exception as e:
+        logger.warning("No se pudo conectar a Nautobot: %s", e)
+        _nautobot_ok = False
+        return []
+
     tenants = data.get("tenants", [])
     for t in tenants:
         _tenants_cache[t["id"]] = t
@@ -73,10 +91,18 @@ async def get_tenants() -> list[dict]:
 
 
 async def get_devices_by_tenant() -> list[dict]:
+    global _nautobot_ok
     if _devices_cache:
         return list(_devices_cache.values())
 
-    data = await _graphql(GRAPHQL_QUERY_DEVICES)
+    try:
+        data = await _graphql(GRAPHQL_QUERY_DEVICES)
+        _nautobot_ok = True
+    except Exception as e:
+        logger.warning("No se pudo obtener dispositivos desde Nautobot: %s", e)
+        _nautobot_ok = False
+        return []
+
     devices = data.get("devices", [])
     allowed_roles = {r.strip().upper() for r in settings.nautobot_device_roles.split(",")}
 

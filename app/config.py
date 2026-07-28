@@ -18,8 +18,9 @@ class Settings(BaseSettings):
     oxidized_api_token: str | None = None
     oxidized_git_repo_path: str | None = None
 
-    gemini_api_key: str
-    gemini_model: str = "gemini-2.5-flash-001"
+    openwebui_api_key: str
+    openwebui_base_url: str
+    openwebui_model: str
 
     cache_ttl_regions: int = 600
     cache_ttl_devices: int = 300

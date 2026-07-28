@@ -5,7 +5,9 @@ os.environ.setdefault("GOOGLE_CLIENT_SECRET", "test-client-secret")
 os.environ.setdefault("SESSION_SECRET_KEY", "test-secret-key")
 os.environ.setdefault("NAUTOBOT_URL", "http://nautobot.test")
 os.environ.setdefault("NAUTOBOT_TOKEN", "test-token")
-os.environ.setdefault("GEMINI_API_KEY", "test-api-key")
+os.environ.setdefault("OPENWEBUI_API_KEY", "test-api-key")
+os.environ.setdefault("OPENWEBUI_BASE_URL", "http://openwebui.test/v1")
+os.environ.setdefault("OPENWEBUI_MODEL", "test-model")
 
 import pytest
 from httpx import ASGITransport, AsyncClient

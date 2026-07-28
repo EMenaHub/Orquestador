@@ -1,8 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="login-container">
-    <h1>Orquestador</h1>
-    <p>Asistente de Red Inteligente</p>
-    <a href="/auth/google" class="google-btn">Iniciar sesión con Google</a>
+<div class="login-page">
+    <div class="login-card glass-card">
+        <div class="glass-card__body" style="padding: 3rem 2.5rem;">
+            <div class="login-card__icon">O</div>
+            <h1 class="login-card__title text-gradient">Orquestador</h1>
+            <p class="login-card__subtitle">Asistente de Red Inteligente</p>
+            <a href="/auth/google" class="btn btn--primary" style="width:100%;padding:0.75rem 1.5rem;font-size:0.9375rem;">
+                Iniciar sesión con Google
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}
