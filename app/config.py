@@ -7,9 +7,11 @@ class Settings(BaseSettings):
     allowed_domain: str = "@tuempresa.com"
     session_secret_key: str
     session_max_age: int = 43200
+    session_https_only: bool = True
 
     nautobot_url: str
     nautobot_token: str
+    nautobot_device_roles: str = "ACC,AGG,CORE,ROUTER,VPN,DECODER"
 
     oxidized_mode: str = "api"
     oxidized_api_url: str | None = None

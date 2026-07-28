@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import RedirectResponse, HTMLResponse
-from starlette.datastructures import URL
+from urllib.parse import urlencode
 import httpx
 
 from app.core.auth import verify_google_token
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 def _redirect_uri(request: Request) -> str:
-    return str(URL(request.base_url).replace(path="/auth/callback"))
+    return str(request.base_url.replace(path="/auth/callback"))
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -28,8 +28,9 @@ async def google_login(request: Request):
         "scope": "openid email profile",
         "access_type": "offline",
     }
-    query = "&".join(f"{k}={v}" for k, v in params.items())
-    return RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{query}")
+    return RedirectResponse(
+        f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}"
+    )
 
 
 @router.get("/callback")

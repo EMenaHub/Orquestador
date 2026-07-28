@@ -1,0 +1,35 @@
+<div x-data="{
+    activeTab: '{{ devices_by_tenant[0].id if devices_by_tenant else "" }}',
+    selected_device: ''
+}">
+    {% if not devices_by_tenant %}
+    <p class="empty-state">No se encontraron dispositivos con los roles configurados.</p>
+    {% else %}
+
+    <nav class="tabs" role="tablist">
+        {% for group in devices_by_tenant %}
+        <button class="tab"
+                :class="{ 'tab--active': activeTab === '{{ group.id }}' }"
+                @click="activeTab = '{{ group.id }}'; selected_device = ''"
+                role="tab"
+                :aria-selected="activeTab === '{{ group.id }}'">
+            {{ group.name }}
+        </button>
+        {% endfor %}
+    </nav>
+
+    {% for group in devices_by_tenant %}
+    <div x-show="activeTab === '{{ group.id }}'" role="tabpanel" class="tab-panel">
+        <select x-model="selected_device"
+                @change="$dispatch('device-selected')"
+                required>
+            <option value="">Seleccionar equipo</option>
+            {% for device in group.devices %}
+            <option value="{{ device.name }}">{{ device.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endfor %}
+
+    {% endif %}
+</div>

@@ -64,3 +64,37 @@ textarea { min-height: 100px; resize: vertical; }
 .htmx-indicator { opacity: 0; transition: opacity 200ms; }
 .htmx-request .htmx-indicator { opacity: 1; }
 .htmx-request.htmx-indicator { opacity: 1; }
+.empty-state { text-align: center; padding: 3rem; color: #888; }
+
+.tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid #e0e0e0;
+    margin-bottom: 1.5rem;
+}
+
+.tab {
+    background: transparent;
+    color: #666;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.tab:hover { color: #1a73e8; }
+.tab--active {
+    color: #1a73e8;
+    border-bottom-color: #1a73e8;
+}
+
+.tab-panel { animation: fadeIn 0.15s ease-in; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}

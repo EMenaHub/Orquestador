@@ -9,22 +9,20 @@
         </form>
     </header>
 
-    <div id="regions-container"
-         hx-get="/api/regions"
+    <div id="tenants-container"
+         hx-get="/api/tenants"
          hx-trigger="load"
          hx-target="this"
-         hx-swap="innerHTML">
+         hx-swap="innerHTML"
+         @device-selected.window="selected_device = $event.target.value">
     </div>
-
-    <div id="device-select"></div>
 
     <form id="query-form"
           x-show="selected_device"
           hx-post="/api/query"
           hx-target="#response"
           hx-swap="innerHTML"
-          @submit.prevent="loading = true; error = ''; $el.dispatchEvent(new CustomEvent('submit-form'))"
-          x-ref="form">
+          @submit.prevent="loading = true; error = ''">
         <input type="hidden" name="hostname" x-model="selected_device">
         <textarea name="question"
                   placeholder="Ej: ¿Qué interfaces tienen asignada la vlan 50?"
@@ -45,11 +43,13 @@
             Alpine.evaluate(document.querySelector('[x-data]'), 'loading = false');
         }
     });
-    document.addEventListener('htmx:beforeSend', function(evt) {
-        Alpine.evaluate(document.querySelector('[x-data]'), 'loading = true; error = ""');
+    document.addEventListener('htmx:beforeRequest', function(evt) {
+        const el = document.querySelector('[x-data]');
+        if (el) Alpine.evaluate(el, 'loading = true; error = ""');
     });
     document.addEventListener('htmx:sendError', function(evt) {
-        Alpine.evaluate(document.querySelector('[x-data]'), 'loading = false; error = "Error de conexión"');
+        const el = document.querySelector('[x-data]');
+        if (el) Alpine.evaluate(el, 'loading = false; error = "Error de conexión"');
     });
 </script>
 {% endblock %}

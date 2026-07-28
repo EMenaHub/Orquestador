@@ -1,4 +1,4 @@
-from unittest.mock import patch, AsyncMock, MagicMock
+from unittest.mock import patch, AsyncMock
 import pytest
 
 
@@ -46,6 +46,39 @@ async def test_stream_endpoint_returns_event_stream(auth_client):
     response = await auth_client.get("/api/stream/nonexistent")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
+
+
+@pytest.mark.asyncio
+async def test_fetch_config_requires_auth(client):
+    response = await client.get("/api/config/TEST")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_fetch_config_returns_plain_text(auth_client):
+    with patch(
+        "app.core.oxidized.OxidizedAPIClient.get_config",
+        new_callable=AsyncMock,
+        return_value="hostname TEST\n!\ninterface GigabitEthernet0/0\n",
+    ):
+        response = await auth_client.get("/api/config/TEST")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+    assert "interface GigabitEthernet0/0" in response.text
+
+
+@pytest.mark.asyncio
+async def test_fetch_config_returns_404(auth_client):
+    with patch(
+        "app.core.oxidized.OxidizedAPIClient.get_config",
+        new_callable=AsyncMock,
+        return_value=None,
+    ):
+        response = await auth_client.get("/api/config/UNKNOWN")
+
+    assert response.status_code == 404
+    assert "no encontrada" in response.json()["detail"].lower()
 
 
 @pytest.mark.asyncio

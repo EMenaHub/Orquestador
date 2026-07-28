@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi import APIRouter, Depends, Form, Request, HTTPException
+from fastapi.responses import HTMLResponse, PlainTextResponse, StreamingResponse
 
 from app.core.auth import require_auth, UserInfo
+from app.core.oxidized import create_oxidized_client
 from app.core.stream import start_query_stream, iter_stream
 from app.templates import templates
 
@@ -29,6 +30,18 @@ async def query_device(
         "partials/sse.html",
         {"stream_id": stream_id},
     )
+
+
+@router.get("/config/{hostname}")
+async def fetch_config(
+    hostname: str,
+    _user: UserInfo = Depends(require_auth),
+):
+    client = create_oxidized_client()
+    config = await client.get_config(hostname)
+    if not config:
+        raise HTTPException(status_code=404, detail=f"Config no encontrada para {hostname}")
+    return PlainTextResponse(config)
 
 
 @router.get("/stream/{stream_id}")
